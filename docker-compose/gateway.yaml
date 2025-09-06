@@ -128,7 +128,7 @@ database:
     busy_timeout: 5000 # MF_DATABASE_MEMORY_BUSY_TIMEOUT (ms)
 
   postgres:
-    dsn: $POSTGRES_DSN # MF_DATABASE_POSTGRES_DSN
+    dsn: ${POSTGRES_DSN} # MF_DATABASE_POSTGRES_DSN
     max_open_conns: 200 # MF_DATABASE_POSTGRES_MAX_OPEN_CONNS
     max_idle_conns: 200 # MF_DATABASE_POSTGRES_MAX_IDLE_CONNS
     conn_max_lifetime: 5m # MF_DATABASE_POSTGRES_CONN_MAX_LIFETIME
@@ -144,7 +144,7 @@ database:
     ssl_prefer_server_cipher_suites: false # MF_DATABASE_POSTGRES_SSL_PREFER_SERVER_CIPHER_SUITES
 
   clickhouse:
-    dsn: $CLICKHOUSE_DSN # MF_DATABASE_CLICKHOUSE_DSN
+    dsn: ${CLICKHOUSE_DSN} # MF_DATABASE_CLICKHOUSE_DSN
     max_open_conns: 100 # MF_DATABASE_CLICKHOUSE_MAX_OPEN_CONNS (higher for analytics)
     max_idle_conns: 50 # MF_DATABASE_CLICKHOUSE_MAX_IDLE_CONNS
     conn_max_lifetime: 10m # MF_DATABASE_CLICKHOUSE_CONN_MAX_LIFETIME
@@ -205,7 +205,7 @@ gateway:
     - provider: openai
       model:
         - gpt-3.5-turbo
-      api_key: $OPENAI_API_KEY
+      api_key: ${OPENAI_API_KEY}
       base_url: https://api.openai.com/v1
       max_tokens: 1000
       temperature: 0.5
@@ -225,7 +225,7 @@ gateway:
       model:
         - gpt-4o-mini
         - gpt-4-turbo
-      api_key: $OPENAI_API_KEY
+      api_key: ${OPENAI_API_KEY}
       base_url: https://api.openai.com/v1
       max_tokens: 1000
       temperature: 0.5
@@ -243,7 +243,7 @@ gateway:
       model:
         - claude-3-5-sonnet-20241022
         - claude-3-5-haiku-20241022
-      api_key: $ANTHROPIC_API_KEY
+      api_key: ${ANTHROPIC_API_KEY}
       base_url: https://api.anthropic.com/v1
       max_tokens: 1000
       temperature: 0.5
