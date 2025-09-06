@@ -15,12 +15,17 @@ services:
       - midfusion-data:/app/data
     networks:
       - midfusion
-    command: ["serve", "--config", "/app/config/gateway.yaml"]
+    environment:
+      API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      envsubst < /app/config/gateway.yaml > /tmp/gateway.yaml &&
+      exec mf serve --config /tmp/gateway.yaml
     depends_on:
       db:
         condition: service_healthy
-      # redis:
-      #   condition: service_healthy
       clickhouse:
         condition: service_healthy
     healthcheck:
