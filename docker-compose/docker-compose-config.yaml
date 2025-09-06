@@ -8,40 +8,27 @@ services:
     container_name: midfusion-gateway
     restart: unless-stopped
     ports:
-      - "8089:8089"  # Midfusion gateway port
+      - "8089:8089"
     volumes:
       - ./gateway.yaml:/app/config/gateway.yaml:ro
       - midfusion-logs:/app/logs
       - midfusion-data:/app/data
     networks:
       - midfusion
-    entrypoint: ["/bin/sh", "-lc"]
     environment:
-      - API_KEY_HASH_SECRET=${API_KEY_HASH_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    command: >-
-      escape() { printf '%s' "$1" | sed -e 's/[&|\\]/\\&/g'; };
-      OAI=$(escape "$OPENAI_API_KEY");
-      ANT=$(escape "$ANTHROPIC_API_KEY");
-      APK=$(escape "$API_KEY_HASH_SECRET");
-      sed -e "s|$${OPENAI_API_KEY}|$OAI|g" \
-          -e "s|$${ANTHROPIC_API_KEY}|$ANT|g" \
-          -e "s|\\$API_KEY_HASH_SECRET|$APK|g" \
-          /app/config/gateway.yaml > /tmp/gateway.yaml && exec mf serve --config /tmp/gateway.yaml
-    depends_on:
-      db:
-        condition: service_healthy
-      # redis:
-      #   condition: service_healthy
-      clickhouse:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8089/debug/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      OAI="${OPENAI_API_KEY}" &&
+      ANT="${ANTHROPIC_API_KEY}" &&
+      APK="${API_KEY_HASH_SECRET}" &&
+      sed -e "s|\${OPENAI_API_KEY}|$OAI|g" \
+          -e "s|\${ANTHROPIC_API_KEY}|$ANT|g" \
+          -e "s|\${API_KEY_HASH_SECRET}|$APK|g" \
+          /app/config/gateway.yaml > /tmp/gateway.yaml &&
+      exec mf serve --config /tmp/gateway.yaml
     
   # Database
   db:
