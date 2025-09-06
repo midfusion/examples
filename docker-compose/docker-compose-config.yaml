@@ -9,21 +9,17 @@ services:
     ports:
       - "8089:8089"
     volumes:
-      - ./gateway.yaml:/app/config/gateway.yaml:ro
+      - ./gateway.yaml:/app/config/gateway.yaml
+      - ./entrypoint.sh:/app/entrypoint.sh
       - midfusion-logs:/app/logs
       - midfusion-data:/app/data
     networks:
       - midfusion
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - API_KEY_HASH_SECRET=${API_KEY_HASH_SECRET}
-    entrypoint: ["/bin/sh", "-lc"]
-    command: >
-      sed -e 's|$${OPENAI_API_KEY}|'"$OPENAI_API_KEY"'|g' \
-          -e 's|$${ANTHROPIC_API_KEY}|'"$ANTHROPIC_API_KEY"'|g' \
-          -e 's|$${API_KEY_HASH_SECRET}|'"$API_KEY_HASH_SECRET"'|g' \
-          /app/config/gateway.yaml > /tmp/gateway.yaml && exec mf serve --config /tmp/gateway.yaml
+      API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    entrypoint: ["/bin/sh", "/app/entrypoint.sh"]
     
   # Database
   db:
