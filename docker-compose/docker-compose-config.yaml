@@ -9,8 +9,7 @@ services:
     ports:
       - "8089:8089"
     volumes:
-      - ./gateway.yaml:/app/config/gateway.yaml
-      - ./entrypoint.sh:/app/entrypoint.sh
+      - ./gateway.yaml:/app/config/gateway.yaml:ro
       - midfusion-logs:/app/logs
       - midfusion-data:/app/data
     networks:
@@ -19,7 +18,7 @@ services:
       API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-    entrypoint: ["/bin/sh", "/app/entrypoint.sh"]
+    command: ["serve", "--config", "/app/config/gateway.yaml"]
     
   # Database
   db:
