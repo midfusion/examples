@@ -1,0 +1,172 @@
+version: '3.8'
+name: "midfusion"
+
+services:
+  # Midfusion Gateway - The main application
+  midfusion:
+    image: midfusionlabs/midfusion
+    container_name: midfusion-gateway
+    restart: unless-stopped
+    ports:
+      - "8089:8089"  # Midfusion gateway port
+    volumes:
+      - ./gateway.yaml:/app/config/gateway.yaml:ro
+      - midfusion-logs:/app/logs
+      - midfusion-data:/app/data
+    networks:
+      - midfusion
+    command: ["serve", "--config", "/app/config/gateway.yaml"]
+    depends_on:
+      db:
+        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8089/debug/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+  # Database
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    container_name: midfusion-postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_DB: midfusion
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    networks:
+      - midfusion
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 20s
+
+  # # Cache & Session Store
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: unless-stopped
+  #   container_name: midfusion-redis
+  #   ports:
+  #     - "6379:6379"
+  #   command: >
+  #     redis-server 
+  #     --requirepass mysecretpassword
+  #     --maxmemory 512mb
+  #     --maxmemory-policy allkeys-lru
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - midfusion
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     interval: 10s
+  #     timeout: 30s
+  #     retries: 5
+  #     start_period: 20s
+
+  # Analytics & Logging Database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    restart: unless-stopped
+    container_name: midfusion-clickhouse
+    hostname: clickhouse
+    environment:
+      CLICKHOUSE_DB: midfusion
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse:rw
+      - clickhouse-logs:/var/log/clickhouse-server:rw
+    networks:
+      - midfusion
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native TCP interface
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # # Distributed Tracing
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   container_name: midfusion-jaeger
+  #   environment:
+  #     - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+  #     - COLLECTOR_OTLP_ENABLED=true
+  #   ports:
+  #     - "16686:16686"  # Jaeger UI
+  #     - "14250:14250"  # gRPC collector
+  #     - "4317:4317"    # OTLP gRPC
+  #     - "4318:4318"    # OTLP HTTP
+  #   networks:
+  #     - midfusion
+  #   restart: unless-stopped
+
+  # # Metrics & Monitoring
+  # grafana:
+  #   image: grafana/grafana-enterprise:latest
+  #   container_name: midfusion-grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin123
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #     - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+  #   networks:
+  #     - midfusion
+  #   volumes:
+  #     - grafana-storage:/var/lib/grafana
+
+  # # OpenTelemetry Collector
+  # otel-collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   container_name: midfusion-otel-collector
+  #   command: ["--config=/otel-collector-config.yaml"]
+  #   volumes:
+  #     - ./build/otel-collector-config.yaml:/otel-collector-config.yaml:ro
+  #   ports:
+  #     - "4319:4317"  # OTLP gRPC (external)
+  #     - "4320:4318"  # OTLP HTTP (external)
+  #   networks:
+  #     - midfusion
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - jaeger
+  #     - grafana
+
+networks:
+  midfusion:
+    driver: bridge
+
+volumes:
+  # grafana-storage:
+  #   driver: local
+  postgres-data:
+    driver: local
+  # redis-data:
+  #   driver: local
+  clickhouse-data:
+    driver: local
+  clickhouse-logs:
+    driver: local
+  midfusion-logs:
+    driver: local
+  midfusion-data:
+    driver: local
