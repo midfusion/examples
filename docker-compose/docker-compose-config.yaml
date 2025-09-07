@@ -14,6 +14,9 @@ services:
       - midfusion-data:/app/data
     networks:
       - midfusion
+    depends_on:
+      - db
+      - clickhouse
     environment:
       API_KEY_HASH_SECRET: ${API_KEY_HASH_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
