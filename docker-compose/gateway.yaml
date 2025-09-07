@@ -128,7 +128,7 @@ database:
     busy_timeout: 5000 # MF_DATABASE_MEMORY_BUSY_TIMEOUT (ms)
 
   postgres:
-    dsn: ${POSTGRES_DSN} # MF_DATABASE_POSTGRES_DSN
+    dsn: "" # MF_DATABASE_POSTGRES_DSN
     max_open_conns: 200 # MF_DATABASE_POSTGRES_MAX_OPEN_CONNS
     max_idle_conns: 200 # MF_DATABASE_POSTGRES_MAX_IDLE_CONNS
     conn_max_lifetime: 5m # MF_DATABASE_POSTGRES_CONN_MAX_LIFETIME
@@ -144,7 +144,7 @@ database:
     ssl_prefer_server_cipher_suites: false # MF_DATABASE_POSTGRES_SSL_PREFER_SERVER_CIPHER_SUITES
 
   clickhouse:
-    dsn: ${CLICKHOUSE_DSN} # MF_DATABASE_CLICKHOUSE_DSN
+    dsn: "" # MF_DATABASE_CLICKHOUSE_DSN
     max_open_conns: 100 # MF_DATABASE_CLICKHOUSE_MAX_OPEN_CONNS (higher for analytics)
     max_idle_conns: 50 # MF_DATABASE_CLICKHOUSE_MAX_IDLE_CONNS
     conn_max_lifetime: 10m # MF_DATABASE_CLICKHOUSE_CONN_MAX_LIFETIME
